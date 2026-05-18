@@ -1,0 +1,1 @@
+"""Prototype-based VSA classifier."""

@@ -1,0 +1,39 @@
+# Data — bulky, not committed; reproduce via scripts/download_data.py
+data/raw/
+data/processed/
+data/*.tsv
+data/*.tsv.gz
+data/*.csv
+data/*.parquet
+data/*.h5
+!data/.gitkeep
+
+# Results / artifacts (commit summary tables, not large pickles)
+results/models/
+results/*.pkl
+results/*.npz
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Envs
+.venv/
+venv/
+env/
+
+# Editors
+.idea/
+.vscode/
+.DS_Store
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Local agent state
+.claude/
