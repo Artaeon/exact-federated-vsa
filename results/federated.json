@@ -1,0 +1,83 @@
+{
+  "config": {
+    "seed": 42,
+    "n_top_genes": 500,
+    "vsa_dim": 10000,
+    "vsa_levels": 20,
+    "min_per_site_xgb": 30,
+    "n_sites_vsa": 19,
+    "n_sites_xgb": 11,
+    "site_counts_vsa": {
+      "B6": 36,
+      "A8": 60,
+      "A2": 53,
+      "E2": 59,
+      "AN": 30,
+      "BH": 143,
+      "AR": 43,
+      "AO": 31,
+      "C8": 37,
+      "EW": 21,
+      "E9": 47,
+      "D8": 49,
+      "GM": 10,
+      "A7": 16,
+      "AQ": 6,
+      "A1": 10,
+      "AC": 14,
+      "GI": 2,
+      "HN": 1
+    },
+    "site_counts_xgb": {
+      "B6": 36,
+      "A8": 60,
+      "A2": 53,
+      "E2": 59,
+      "AN": 30,
+      "BH": 143,
+      "AR": 43,
+      "AO": 31,
+      "C8": 37,
+      "E9": 47,
+      "D8": 49
+    },
+    "n_train_total": 668,
+    "n_test": 144,
+    "subtypes": [
+      "LumA",
+      "LumB",
+      "Basal",
+      "Her2",
+      "Normal"
+    ]
+  },
+  "vsa_drift_max_abs": 0.0,
+  "timing_s": {
+    "vsa_centralized": 12.401371541999652,
+    "vsa_federated": 4.350210936999247,
+    "xgb_centralized": 10.106421847999627,
+    "xgb_federated": 4.364882995999324
+  },
+  "test": [
+    {
+      "model": "vsa_centralized",
+      "accuracy": 0.7152777777777778,
+      "macro_f1": 0.7457110910302399
+    },
+    {
+      "model": "vsa_federated",
+      "accuracy": 0.7152777777777778,
+      "macro_f1": 0.7457110910302399
+    },
+    {
+      "model": "xgb_centralized",
+      "accuracy": 0.8402777777777778,
+      "macro_f1": 0.8240284122920869
+    },
+    {
+      "model": "xgb_federated",
+      "accuracy": 0.7152777777777778,
+      "macro_f1": 0.597264798091398
+    }
+  ]
+}
