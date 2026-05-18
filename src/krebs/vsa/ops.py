@@ -63,6 +63,28 @@ class VectorOps:
         return np.sign(v).astype(np.float64)
 
 
+def bind_map(a: HVector, b: HVector) -> HVector:
+    """MAP-C binding: element-wise multiplication on bipolar (+1/-1) vectors.
+
+    Different VSA flavor from PRISM's HRR (circular convolution). Properties
+    that matter for classification:
+        - O(d) instead of O(d log d) (no FFT)
+        - Exactly reversible — bind_map is its own inverse: a * (a * b) = b
+        - Output preserves the bipolar form when inputs are bipolar
+        - Commutative and associative
+
+    Standard in HDC classification (Rahimi et al. 2019, Imani et al. 2018).
+    Use HRR ``bind`` for compositional symbolic reasoning; use ``bind_map``
+    for high-throughput numeric encoding.
+    """
+    return a * b
+
+
+def unbind_map(bound: HVector, key: HVector) -> HVector:
+    """Inverse of bind_map. Identical operation — MAP-C is self-inverse."""
+    return bound * key
+
+
 def bind(a: HVector, b: HVector) -> HVector:
     return np.real(np.fft.ifft(np.fft.fft(a) * np.fft.fft(b)))
 

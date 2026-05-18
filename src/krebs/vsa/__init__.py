@@ -7,7 +7,16 @@ repo can install without spaCy or any NLP stack.
 """
 
 from krebs.vsa.config import VSAConfig, DEFAULT_CONFIG
-from krebs.vsa.ops import VectorOps, HVector, bind, unbind, bundle, similarity
+from krebs.vsa.ops import (
+    HVector,
+    VectorOps,
+    bind,
+    bind_map,
+    bundle,
+    similarity,
+    unbind,
+    unbind_map,
+)
 
 __all__ = [
     "VSAConfig",
@@ -15,7 +24,9 @@ __all__ = [
     "VectorOps",
     "HVector",
     "bind",
+    "bind_map",
     "unbind",
+    "unbind_map",
     "bundle",
     "similarity",
 ]
