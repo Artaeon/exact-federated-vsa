@@ -24,6 +24,12 @@ from krebs.data import tcga_brca
 from krebs.encoding.level_encoder import LevelEncoder
 from krebs.encoding.patient_encoder import PatientEncoder
 from krebs.features import top_variable_genes
+from krebs.interpret import (
+    pam50_recovery,
+    top_genes_per_class,
+    vsa_class_gene_scores,
+    xgb_class_gene_scores,
+)
 from krebs.vsa import VSAConfig
 
 RESULTS_DIR = Path(__file__).resolve().parents[1] / "results"
@@ -96,6 +102,26 @@ def main() -> None:
             _metrics("vsa", yte, vsa_model.predict(Xte), ds.subtypes),
         ],
     }
+    print("      computing interpretability artifacts...")
+    vsa_scores = vsa_class_gene_scores(vsa_model)
+    xgb_scores = xgb_class_gene_scores(xgb_model, Xte, yte)
+    results["interpretability"] = {
+        "vsa_top_genes_per_class": {
+            ds.subtypes[c]: top_genes_per_class(vsa_scores, selected_genes, k=10)[c]
+            for c in range(len(ds.subtypes))
+        },
+        "xgb_top_genes_per_class": {
+            ds.subtypes[c]: top_genes_per_class(xgb_scores, selected_genes, k=10)[c]
+            for c in range(len(ds.subtypes))
+        },
+        "pam50_recovery": {
+            "vsa": pam50_recovery(vsa_scores, selected_genes),
+            "xgb": pam50_recovery(xgb_scores, selected_genes),
+        },
+    }
+    np.save(RESULTS_DIR / "vsa_class_gene_scores.npy", vsa_scores)
+    np.save(RESULTS_DIR / "xgb_class_gene_scores.npy", xgb_scores)
+
     out_path = RESULTS_DIR / "experiment.json"
     out_path.write_text(json.dumps(results, indent=2))
     print(f"      wrote {out_path}")
@@ -107,6 +133,11 @@ def main() -> None:
     for m in results["test"]:
         print(f"  {m['model']:<8}  acc={m['accuracy']:.3f}  macro_f1={m['macro_f1']:.3f}")
     print(f"\ntrain time:  xgb={xgb_train_s:.1f}s   vsa={vsa_train_s:.1f}s")
+
+    rec = results["interpretability"]["pam50_recovery"]
+    print("\n=== PAM50 signature recovery (fraction of top-50 genes in the canonical 50) ===")
+    print(f"  vsa: union={rec['vsa']['union_across_classes']:.2f}")
+    print(f"  xgb: union={rec['xgb']['union_across_classes']:.2f}")
 
 
 if __name__ == "__main__":
