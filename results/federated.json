@@ -53,10 +53,10 @@
   },
   "vsa_drift_max_abs": 0.0,
   "timing_s": {
-    "vsa_centralized": 12.401371541999652,
-    "vsa_federated": 4.350210936999247,
-    "xgb_centralized": 10.106421847999627,
-    "xgb_federated": 4.364882995999324
+    "vsa_centralized": 5.149102585999572,
+    "vsa_federated": 3.1798149089991057,
+    "xgb_centralized": 5.781365274999189,
+    "xgb_federated": 2.266710828000214
   },
   "test": [
     {
