@@ -5,6 +5,7 @@ classifier) can separate two well-defined synthetic classes. If accuracy
 is near random here, something is structurally wrong before we worry
 about TCGA performance.
 """
+
 import numpy as np
 
 from krebs.classify.prototype import VSAClassifier

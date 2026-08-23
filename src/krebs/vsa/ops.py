@@ -9,6 +9,7 @@ References:
     Kanerva, P. (2009). Hyperdimensional Computing.
     Plate, T. A. (1995). Holographic Reduced Representations.
 """
+
 from __future__ import annotations
 
 import numpy as np

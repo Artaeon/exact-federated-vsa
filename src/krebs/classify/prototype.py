@@ -33,7 +33,7 @@ class VSAClassifier:
     def dim(self) -> int:
         return self.encoder.dim
 
-    def fit(self, X: np.ndarray, y: np.ndarray) -> "VSAClassifier":
+    def fit(self, X: np.ndarray, y: np.ndarray) -> VSAClassifier:
         H = self.encoder.encode_batch(X)  # (n_samples, dim)
         protos = np.zeros((self.n_classes, self.dim), dtype=np.float32)
         for c in range(self.n_classes):
@@ -47,12 +47,10 @@ class VSAClassifier:
         """Cosine similarity of each sample against each class prototype."""
         if self.prototypes is None:
             raise RuntimeError("VSAClassifier not fitted")
-        H = self.encoder.encode_batch(X)                                  # (n, dim)
+        H = self.encoder.encode_batch(X)  # (n, dim)
         H_norm = H / (np.linalg.norm(H, axis=1, keepdims=True) + 1e-12)
-        P_norm = self.prototypes / (
-            np.linalg.norm(self.prototypes, axis=1, keepdims=True) + 1e-12
-        )
-        return H_norm @ P_norm.T                                          # (n, n_classes)
+        P_norm = self.prototypes / (np.linalg.norm(self.prototypes, axis=1, keepdims=True) + 1e-12)
+        return H_norm @ P_norm.T  # (n, n_classes)
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         return self.decision_function(X).argmax(axis=1)

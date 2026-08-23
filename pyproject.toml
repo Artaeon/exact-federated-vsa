@@ -5,7 +5,7 @@ description = "Interpretable cancer molecular subtype classification with Vector
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-authors = [{ name = "Raphael Artaeon" }]
+authors = [{ name = "Artaeon" }]
 keywords = ["vsa", "hyperdimensional-computing", "oncology", "tcga", "interpretable-ml"]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
@@ -45,3 +45,4 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "N"]
+ignore = ["N803", "N806"]

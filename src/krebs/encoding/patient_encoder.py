@@ -35,9 +35,9 @@ class PatientEncoder:
         self._rng = np.random.default_rng(
             None if self.config.seed is None else self.config.seed + 1
         )
-        self.roles: np.ndarray = self._rng.choice(
-            [-1.0, 1.0], size=(n_genes, self.dim)
-        ).astype(np.float32)
+        self.roles: np.ndarray = self._rng.choice([-1.0, 1.0], size=(n_genes, self.dim)).astype(
+            np.float32
+        )
 
     @property
     def dim(self) -> int:
@@ -47,9 +47,9 @@ class PatientEncoder:
         """Encode a single patient: (n_genes,) -> (dim,)."""
         if x.shape[0] != self.n_genes:
             raise ValueError(f"expected {self.n_genes} features, got {x.shape[0]}")
-        level_vecs = self.level_encoder.encode(x)            # (n_genes, dim)
-        bound = self.roles * level_vecs                       # MAP-C bind
-        return bound.sum(axis=0)                              # bundle (sum)
+        level_vecs = self.level_encoder.encode(x)  # (n_genes, dim)
+        bound = self.roles * level_vecs  # MAP-C bind
+        return bound.sum(axis=0)  # bundle (sum)
 
     def encode_batch(self, X: np.ndarray) -> np.ndarray:
         """Encode many patients: (n_samples, n_genes) -> (n_samples, dim).

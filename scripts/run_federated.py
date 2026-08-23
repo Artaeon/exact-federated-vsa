@@ -10,6 +10,7 @@ Writes results/federated.json. The headline number is the drift between
 centralized and federated VSA prototypes (should be ~0 — exact equality
 modulo float32 summation order).
 """
+
 from __future__ import annotations
 
 import json
@@ -60,7 +61,7 @@ def main() -> None:
 
     print(f"[2/6] feature selection (top {N_TOP_GENES} variable genes on train fold)...")
     gene_idx = top_variable_genes(ds.X[train_idx], n_top=N_TOP_GENES)
-    X = ds.X[:, gene_idx]            # we slice by full-row index below
+    X = ds.X[:, gene_idx]  # we slice by full-row index below
     Xtr, Xte = X[train_idx], X[test_idx]
     ytr, yte = ds.y[train_idx], ds.y[test_idx]
 
@@ -71,22 +72,28 @@ def main() -> None:
     # VSA federation: ALL sites participate (even single-patient sites).
     all_sites_global = partition_by_site(train_idx, ds.sample_ids, min_per_site=1)
     sites_vsa = {
-        s: np.asarray([g_to_local[int(g)] for g in idxs])
-        for s, idxs in all_sites_global.items()
+        s: np.asarray([g_to_local[int(g)] for g in idxs]) for s, idxs in all_sites_global.items()
     }
 
     # XGBoost federation: sites with enough data AND all classes.
-    big_sites_global = partition_by_site(
-        train_idx, ds.sample_ids, min_per_site=MIN_PER_SITE_XGB
-    )
+    big_sites_global = partition_by_site(train_idx, ds.sample_ids, min_per_site=MIN_PER_SITE_XGB)
     sites_xgb = {
-        s: np.asarray([g_to_local[int(g)] for g in idxs])
-        for s, idxs in big_sites_global.items()
+        s: np.asarray([g_to_local[int(g)] for g in idxs]) for s, idxs in big_sites_global.items()
     }
-    print(f"      VSA federation:   {len(sites_vsa)} sites covering "
-          f"{sum(len(i) for i in sites_vsa.values())} / {len(train_idx)} training samples")
-    print(f"      XGBoost federation: {len(sites_xgb)} sites covering "
-          f"{sum(len(i) for i in sites_xgb.values())} / {len(train_idx)} (sites >= {MIN_PER_SITE_XGB})")
+    sites_xgb = {
+        site: idxs
+        for site, idxs in sites_xgb.items()
+        if len(np.unique(ytr[idxs])) == len(ds.subtypes)
+    }
+    print(
+        f"      VSA federation:   {len(sites_vsa)} sites covering "
+        f"{sum(len(i) for i in sites_vsa.values())} / {len(train_idx)} training samples"
+    )
+    print(
+        f"      XGBoost federation: {len(sites_xgb)} sites covering "
+        f"{sum(len(i) for i in sites_xgb.values())} / {len(train_idx)} "
+        f"(sites >= {MIN_PER_SITE_XGB}, all classes present)"
+    )
     site_counts_all = {s: int(len(i)) for s, i in sites_vsa.items()}
     for site, n in sorted(site_counts_all.items(), key=lambda kv: -kv[1]):
         marker = " (xgb)" if site in sites_xgb else ""
@@ -115,8 +122,10 @@ def main() -> None:
     fed_vsa = VSAClassifier(pat_enc, n_classes=len(ds.subtypes))
     fed_vsa.prototypes = fed_result.prototypes
 
-    print(f"      drift (federated VSA vs centralized VSA, max abs): "
-          f"{fed_result.drift_from_centralized:.6g}")
+    print(
+        f"      drift (federated VSA vs centralized VSA, max abs): "
+        f"{fed_result.drift_from_centralized:.6g}"
+    )
 
     print("[5/6] centralized + federated XGBoost...")
     t0 = time.perf_counter()
@@ -124,9 +133,7 @@ def main() -> None:
     t_central_xgb = time.perf_counter() - t0
 
     t0 = time.perf_counter()
-    fed_xgb = FederatedXGBoost(n_classes=len(ds.subtypes), seed=SEED).fit(
-        Xtr, ytr, sites_xgb
-    )
+    fed_xgb = FederatedXGBoost(n_classes=len(ds.subtypes), seed=SEED).fit(Xtr, ytr, sites_xgb)
     t_fed_xgb = time.perf_counter() - t0
     print(f"      federated XGBoost participating sites: {fed_xgb.n_participating_sites}")
 
@@ -168,7 +175,9 @@ def main() -> None:
     print("=== test (shared test fold) ===")
     for r in rows:
         print(f"  {r['model']:<18}  acc={r['accuracy']:.3f}  macro_f1={r['macro_f1']:.3f}")
-    print(f"\nVSA federated vs centralized drift (max abs): {fed_result.drift_from_centralized:.3e}")
+    print(
+        f"\nVSA federated vs centralized drift (max abs): {fed_result.drift_from_centralized:.3e}"
+    )
     print(f"  -> {'EXACT' if fed_result.drift_from_centralized < 1e-3 else 'DRIFT'} match")
 
 

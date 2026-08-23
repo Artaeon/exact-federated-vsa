@@ -27,13 +27,57 @@ from krebs.classify.prototype import VSAClassifier
 # Reference: "Supervised risk predictor of breast cancer based on intrinsic
 # subtypes", J Clin Oncol 27(8). These 50 genes drive PAM50 calls.
 PAM50_GENES = {
-    "ACTR3B", "ANLN", "BAG1", "BCL2", "BIRC5", "BLVRA", "CCNB1", "CCNE1",
-    "CDC20", "CDC6", "CDH3", "CENPF", "CEP55", "CXXC5", "EGFR", "ERBB2",
-    "ESR1", "EXO1", "FGFR4", "FOXA1", "FOXC1", "GPR160", "GRB7", "KIF2C",
-    "KRT14", "KRT17", "KRT5", "KRT6A", "MAPT", "MDM2", "MELK", "MIA",
-    "MKI67", "MLPH", "MMP11", "MYBL2", "MYC", "NAT1", "NDC80", "NUF2",
-    "ORC6", "PGR", "PHGDH", "PTTG1", "RRM2", "SFRP1", "SLC39A6", "TMEM45B",
-    "TYMS", "UBE2C", "UBE2T",
+    "ACTR3B",
+    "ANLN",
+    "BAG1",
+    "BCL2",
+    "BIRC5",
+    "BLVRA",
+    "CCNB1",
+    "CCNE1",
+    "CDC20",
+    "CDC6",
+    "CDH3",
+    "CENPF",
+    "CEP55",
+    "CXXC5",
+    "EGFR",
+    "ERBB2",
+    "ESR1",
+    "EXO1",
+    "FGFR4",
+    "FOXA1",
+    "FOXC1",
+    "GPR160",
+    "GRB7",
+    "KIF2C",
+    "KRT14",
+    "KRT17",
+    "KRT5",
+    "KRT6A",
+    "MAPT",
+    "MDM2",
+    "MELK",
+    "MIA",
+    "MKI67",
+    "MLPH",
+    "MMP11",
+    "MYBL2",
+    "MYC",
+    "NAT1",
+    "NDC80",
+    "NUF2",
+    "ORC6",
+    "PGR",
+    "PHGDH",
+    "PTTG1",
+    "RRM2",
+    "SFRP1",
+    "SLC39A6",
+    "TMEM45B",
+    "TYMS",
+    "UBE2C",
+    "UBE2T",
 }
 
 
@@ -46,20 +90,20 @@ def vsa_class_gene_scores(model: VSAClassifier) -> np.ndarray:
     """
     if model.prototypes is None:
         raise RuntimeError("VSAClassifier not fitted")
-    roles = model.encoder.roles                         # (n_genes, dim)
-    levels = model.encoder.level_encoder.levels        # (n_levels, dim)
+    roles = model.encoder.roles  # (n_genes, dim)
+    levels = model.encoder.level_encoder.levels  # (n_levels, dim)
     n_classes = model.n_classes
     n_genes = roles.shape[0]
     L_low = levels[0]
     L_high = levels[-1]
     scores = np.empty((n_classes, n_genes), dtype=np.float32)
     proto_norms = np.linalg.norm(model.prototypes, axis=1, keepdims=True) + 1e-12
-    P = model.prototypes / proto_norms                  # (n_classes, dim)
+    P = model.prototypes / proto_norms  # (n_classes, dim)
     roles_unit = roles / (np.linalg.norm(roles, axis=1, keepdims=True) + 1e-12)
     L_low_unit = L_low / (np.linalg.norm(L_low) + 1e-12)
     L_high_unit = L_high / (np.linalg.norm(L_high) + 1e-12)
     for c in range(n_classes):
-        unbound = P[c][None, :] * roles                # MAP-C unbind: (n_genes, dim)
+        unbound = P[c][None, :] * roles  # MAP-C unbind: (n_genes, dim)
         u_norm = unbound / (np.linalg.norm(unbound, axis=1, keepdims=True) + 1e-12)
         sim_high = u_norm @ L_high_unit
         sim_low = u_norm @ L_low_unit

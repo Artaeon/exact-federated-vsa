@@ -25,7 +25,7 @@ class XGBoostBaseline:
             tree_method="hist",
         )
 
-    def fit(self, X: np.ndarray, y: np.ndarray) -> "XGBoostBaseline":
+    def fit(self, X: np.ndarray, y: np.ndarray) -> XGBoostBaseline:
         self.model.fit(X, y)
         return self
 

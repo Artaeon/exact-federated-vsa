@@ -4,6 +4,7 @@ If these pass, bind/unbind round-trip and similarity gives near-zero for
 random pairs and ~1 for self. Anything downstream (encoders, classifier)
 builds on these.
 """
+
 from krebs.vsa import DEFAULT_CONFIG, VectorOps, VSAConfig
 
 

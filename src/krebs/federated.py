@@ -31,7 +31,6 @@ from dataclasses import dataclass
 import numpy as np
 import xgboost as xgb
 
-from krebs.classify.prototype import VSAClassifier
 from krebs.encoding.patient_encoder import PatientEncoder
 
 
@@ -57,19 +56,15 @@ def partition_by_site(
     by_site: dict[str, list[int]] = defaultdict(list)
     for i in indices:
         by_site[tss[i]].append(int(i))
-    return {
-        site: np.asarray(idxs)
-        for site, idxs in by_site.items()
-        if len(idxs) >= min_per_site
-    }
+    return {site: np.asarray(idxs) for site, idxs in by_site.items() if len(idxs) >= min_per_site}
 
 
 @dataclass
 class FederatedVSAResult:
-    prototypes: np.ndarray                # (n_classes, dim)
-    per_site_prototypes: dict[str, np.ndarray]   # site -> (n_classes, dim)
+    prototypes: np.ndarray  # (n_classes, dim)
+    per_site_prototypes: dict[str, np.ndarray]  # site -> (n_classes, dim)
     per_site_sample_counts: dict[str, int]
-    drift_from_centralized: float         # max abs diff vs centralized, 0 if exact
+    drift_from_centralized: float  # max abs diff vs centralized, 0 if exact
 
 
 def train_federated_vsa(
@@ -135,7 +130,7 @@ class FederatedXGBoost:
         X: np.ndarray,
         y: np.ndarray,
         site_indices: dict[str, np.ndarray],
-    ) -> "FederatedXGBoost":
+    ) -> FederatedXGBoost:
         for site, idxs in site_indices.items():
             Xs = X[idxs]
             ys = y[idxs]

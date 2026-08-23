@@ -4,6 +4,7 @@ Loads the data, applies variance-based gene filtering on the training set,
 trains both classifiers (XGBoost baseline + VSA prototype), evaluates on
 val and test, and writes a results JSON + per-class metrics to results/.
 """
+
 from __future__ import annotations
 
 import json
@@ -62,7 +63,9 @@ def main() -> None:
 
     print(f"[2/5] selecting top {N_TOP_GENES} variable genes (training fold only)...")
     gene_idx = top_variable_genes(ds.X[train_idx], n_top=N_TOP_GENES)
-    Xtr, Xva, Xte = ds.X[train_idx][:, gene_idx], ds.X[val_idx][:, gene_idx], ds.X[test_idx][:, gene_idx]
+    Xtr = ds.X[train_idx][:, gene_idx]
+    Xva = ds.X[val_idx][:, gene_idx]
+    Xte = ds.X[test_idx][:, gene_idx]
     ytr, yva, yte = ds.y[train_idx], ds.y[val_idx], ds.y[test_idx]
     selected_genes = ds.gene_names[gene_idx]
     np.save(RESULTS_DIR / "selected_genes.npy", selected_genes)

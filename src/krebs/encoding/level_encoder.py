@@ -52,7 +52,7 @@ class LevelEncoder:
             levels[k, flip_idx] *= -1
         return levels
 
-    def fit(self, X: np.ndarray) -> "LevelEncoder":
+    def fit(self, X: np.ndarray) -> LevelEncoder:
         """Compute quantile bin edges over the GLOBAL training distribution.
 
         Global bins (rather than per-feature) are appropriate here because

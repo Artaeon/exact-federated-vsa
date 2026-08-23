@@ -6,7 +6,7 @@ bundle, similarity. Kept dependency-free (NumPy only) so the rest of this
 repo can install without spaCy or any NLP stack.
 """
 
-from krebs.vsa.config import VSAConfig, DEFAULT_CONFIG
+from krebs.vsa.config import DEFAULT_CONFIG, VSAConfig
 from krebs.vsa.ops import (
     HVector,
     VectorOps,

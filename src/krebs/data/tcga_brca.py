@@ -70,7 +70,7 @@ class TCGABRCA:
 
     def class_counts(self) -> dict[str, int]:
         counts = np.bincount(self.y, minlength=len(self.subtypes))
-        return {name: int(c) for name, c in zip(self.subtypes, counts)}
+        return {name: int(c) for name, c in zip(self.subtypes, counts, strict=True)}
 
 
 def load(
@@ -118,15 +118,16 @@ def load(
     gene_names = np.asarray(expression.index.tolist(), dtype=str)
     sample_ids = np.asarray(keep, dtype=str)
 
-    ds = TCGABRCA(
-        X=X, y=y, subtypes=SUBTYPES, gene_names=gene_names, sample_ids=sample_ids
-    )
+    ds = TCGABRCA(X=X, y=y, subtypes=SUBTYPES, gene_names=gene_names, sample_ids=sample_ids)
 
     if cache:
         CACHE_DIR.mkdir(parents=True, exist_ok=True)
         np.savez_compressed(
             cache_path,
-            X=ds.X, y=ds.y, gene_names=ds.gene_names, sample_ids=ds.sample_ids,
+            X=ds.X,
+            y=ds.y,
+            gene_names=ds.gene_names,
+            sample_ids=ds.sample_ids,
             subtypes=np.asarray(ds.subtypes, dtype=str),
         )
     return ds
@@ -151,9 +152,7 @@ def split(
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Stratified train/val/test split. Returns three index arrays."""
     idx = np.arange(ds.n_samples)
-    train_val, test = train_test_split(
-        idx, test_size=test_size, stratify=ds.y, random_state=seed
-    )
+    train_val, test = train_test_split(idx, test_size=test_size, stratify=ds.y, random_state=seed)
     relative_val = val_size / (1.0 - test_size)
     train, val = train_test_split(
         train_val,

@@ -3,11 +3,11 @@
 Skips automatically if data hasn't been downloaded yet (so CI without a
 data cache won't fail). Run `python scripts/download_data.py` first.
 """
+
 import numpy as np
 import pytest
 
 from krebs.data import tcga_brca
-
 
 pytestmark = pytest.mark.skipif(
     not tcga_brca.EXPRESSION_FILE.exists() or not tcga_brca.CLINICAL_FILE.exists(),
