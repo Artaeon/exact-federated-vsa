@@ -6,7 +6,7 @@
     "vsa_levels": 20,
     "min_per_site_xgb": 30,
     "n_sites_vsa": 19,
-    "n_sites_xgb": 11,
+    "n_sites_xgb": 9,
     "site_counts_vsa": {
       "B6": 36,
       "A8": 60,
@@ -33,11 +33,9 @@
       "A8": 60,
       "A2": 53,
       "E2": 59,
-      "AN": 30,
       "BH": 143,
       "AR": 43,
       "AO": 31,
-      "C8": 37,
       "E9": 47,
       "D8": 49
     },
@@ -53,10 +51,10 @@
   },
   "vsa_drift_max_abs": 0.0,
   "timing_s": {
-    "vsa_centralized": 5.149102585999572,
-    "vsa_federated": 3.1798149089991057,
-    "xgb_centralized": 5.781365274999189,
-    "xgb_federated": 2.266710828000214
+    "vsa_centralized": 2.6110021899999083,
+    "vsa_federated": 1.8796173910000107,
+    "xgb_centralized": 5.260525967999911,
+    "xgb_federated": 2.690592483999808
   },
   "test": [
     {
