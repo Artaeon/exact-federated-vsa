@@ -1,6 +1,15 @@
-# krebs — Interpretable and Federated Cancer Subtype Classification with Vector Symbolic Architectures
+# Exact Federated VSA
 
-> A short methodology note: exact federated training over real institutional partitions of TCGA-BRCA, using Vector Symbolic Architectures. Pre-alpha research, not for clinical use.
+Interpretable cancer-subtype classification with Vector Symbolic Architectures (VSA), evaluated on real institutional partitions of TCGA-BRCA.
+
+[![CI](https://github.com/Artaeon/exact-federated-vsa/actions/workflows/ci.yml/badge.svg)](https://github.com/Artaeon/exact-federated-vsa/actions/workflows/ci.yml)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+> Pre-alpha research software. This repository is not a medical device and must not be used for diagnosis, treatment, or other clinical decisions.
+
+**Documentation:** [Reproducibility](docs/REPRODUCIBILITY.md) ·
+[Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [License](LICENSE)
 
 ## Headline finding
 
@@ -11,15 +20,15 @@ On TCGA-BRCA PAM50 molecular-subtype classification, partitioned along the **rea
 | VSA centralized | 0.715 | 0.746 | (data pooled) | 668 / 668 |
 | **VSA federated** | **0.715** | **0.746** | **19 / 19** | **668 / 668** |
 | XGBoost centralized | 0.840 | 0.824 | (data pooled) | 668 / 668 |
-| XGBoost federated (per-site, prediction averaging) | 0.715 | 0.597 | 11 / 19 | 588 / 668 |
+| XGBoost per-site ensemble (prediction averaging) | 0.715 | 0.597 | 9 / 19 | 521 / 668 |
 
 **The drift between the centralized and federated VSA models, measured as the max absolute difference across all class-prototype components, is 0.0 — bit-identical.** This is not an empirical close-match; it is the algebraic property `sum_s(sum_{class=c} H_i) = sum_{class=c} H_i` realized on real data.
 
 Why it matters:
 
-1. VSA federation can include **every** site, including the 8 institutions with 1–21 patients each — they simply contribute fewer hypervectors. XGBoost federation requires enough per-site data + every class represented and necessarily drops the long tail (here, 80 patients across 8 sites).
+1. VSA federation can include **every** site, including institutions with only a handful of patients — they simply contribute fewer hypervectors. The per-site XGBoost baseline requires enough data and every class at each participating site, so it excludes 10 sites and 147 training samples here.
 2. In the fair federated regime, VSA matches XGBoost accuracy and **beats it on macro-F1 by 14.9 points** (0.746 vs 0.597). XGBoost's small-site degradation falls hardest on rare classes (Her2 7%, Normal 12%).
-3. Patient data never leaves any site in the VSA protocol; only the per-class summed hypervectors do.
+3. The simulated VSA protocol exchanges per-class summed hypervectors rather than individual patient records. This reduces data movement, but is not by itself a production privacy guarantee.
 
 ## What this is
 
@@ -27,7 +36,7 @@ A direct empirical comparison of two classifier families on a question that matt
 
 > *Can multiple hospitals jointly train a tumor-subtype classifier without ever pooling patient data — and without losing accuracy?*
 
-For Vector Symbolic Architectures (VSA, also called Hyperdimensional Computing), the answer is "yes, exactly, by mathematical construction." The federated and centralized models are not approximately equivalent — they are the same model. For gradient-boosted trees, the cheap federation that is feasible without special infrastructure (per-site training, prediction ensembling) loses both accuracy and the ability to include small sites.
+For Vector Symbolic Architectures (VSA, also called Hyperdimensional Computing), the model aggregation is exact by mathematical construction. The federated and centralized models are not approximately equivalent — they are the same model. The comparison baseline is a simple ensemble of per-site gradient-boosted trees, not a full implementation of a federated XGBoost protocol.
 
 ## Motivation
 
@@ -64,10 +73,10 @@ VSA addresses both at once:
 
 | | val acc | val macro-F1 | test acc | test macro-F1 | train time |
 |---|---|---|---|---|---|
-| XGBoost | 0.847 | 0.846 | 0.840 | 0.824 | 41 s |
-| VSA | 0.833 | 0.853 | 0.715 | 0.746 | 5 s |
+| XGBoost | 0.840 | 0.839 | 0.840 | 0.824 | 4.4 s |
+| VSA | 0.833 | 0.853 | 0.715 | 0.746 | 1.8 s |
 
-In the standard centralized setup, XGBoost outperforms VSA on raw accuracy by 12.5 points but the gap on macro-F1 shrinks to 7.8 points. VSA trains ~8× faster as a one-shot prototype. This part is unsurprising; gradient-boosted trees are very strong on tabular benchmarks.
+In the standard centralized setup, XGBoost outperforms VSA on raw accuracy by 12.5 points but the gap on macro-F1 shrinks to 7.8 points. VSA trained roughly 2.5× faster in this run as a one-shot prototype. Timings are hardware- and version-dependent; gradient-boosted trees remain a strong tabular baseline.
 
 ### Federated comparison (the main result)
 
@@ -76,7 +85,7 @@ In the standard centralized setup, XGBoost outperforms VSA on raw accuracy by 12
 | VSA centralized | 0.715 | 0.746 | — | 668 | (baseline) |
 | **VSA federated** | **0.715** | **0.746** | **all 19** | **668** | **0 (exact)** |
 | XGBoost centralized | 0.840 | 0.824 | — | 668 | (baseline) |
-| XGBoost federated | 0.715 | 0.597 | 11 (≥ 30 samples) | 588 | 0.125 acc, 0.227 macro-F1 |
+| XGBoost per-site ensemble | 0.715 | 0.597 | 9 (≥ 30 samples, all classes) | 521 | 0.125 acc, 0.227 macro-F1 |
 
 Site distribution (19 contributing TCGA institutions, 1–209 patients each):
 
@@ -111,17 +120,17 @@ XGBoost's SHAP-based importances surface canonical breast cancer markers (ESR1, 
 
 ## What this means for cancer research
 
-**Federated learning is a constant friction in multi-institutional cancer studies.** Patient data is regulated; sharing requires data-use agreements that take months. Existing federated tree methods (SecureBoost, federated XGBoost) require infrastructure and approximate the centralized model. The result here is qualitatively different: there is no approximation, no infrastructure beyond shared random seeds, and the protocol is two operations (sum, broadcast).
+**Federated learning introduces practical friction in multi-institutional cancer studies.** The experiment demonstrates a particularly simple aggregation property: after a shared encoding is established, the VSA prototype model can be assembled by summing site-level contributions. A real deployment would still require authentication, secure transport, governance, and privacy-preserving aggregation.
 
 **The practical scenario this supports** is a multi-site study where:
 
 - Each participating site holds its own RNA-seq + clinical metadata locally.
 - A coordinator distributes a shared schema (role + level hypervectors) once.
-- Each site computes and transmits 5 per-class summed hypervectors (~50 KB each at d=10,000) and nothing else.
+- Each site computes and transmits 5 per-class summed hypervectors (~40 KB each as float32 at d=10,000, or ~200 KB total before protocol overhead).
 - The coordinator sums them; the resulting classifier is bit-identical to centralized training.
 - New sites can join later by adding their per-class sums to the global prototypes — no retraining.
 
-The accuracy ceiling here (0.715 test on PAM50) is lower than gradient-boosted trees can reach centrally, and this is honestly reported. But in the federated regime that real multi-site studies actually live in, the VSA classifier outperforms federated XGBoost on macro-F1 by 14.9 points while including every institution and losing no training data.
+The accuracy ceiling here (0.715 test on PAM50) is lower than gradient-boosted trees can reach centrally. Against the simple per-site ensemble used in this experiment, the VSA classifier improves macro-F1 by 14.9 points while including every institution and losing no training data. This result should not be generalized to other federated tree-learning systems without a direct comparison.
 
 ## Limitations (honest)
 
@@ -130,7 +139,7 @@ The accuracy ceiling here (0.715 test on PAM50) is lower than gradient-boosted t
 - **Interpretability is weaker than SHAP.** VSA's intrinsic per-(class, gene) score is noisier and recovers fewer canonical genes than XGBoost+SHAP. Concrete fixes: ensemble VSA over multiple random role-vector seeds and aggregate the sign and median magnitude per gene; or replace variance-based feature selection with a supervised ANOVA-F filter on the training fold.
 - **Centralized accuracy.** VSA trails XGBoost by ~12 points centrally. The federated comparison is where VSA wins; on a single-institution single-machine setup with no privacy constraint, XGBoost remains the better classifier. The argument is structural, not "always better."
 - **Federation simulation, not deployment.** We simulate federation on data we hold centrally. A real deployment needs encrypted aggregation (so the coordinator can't reverse-engineer a site's contribution from the prototype sum), and possibly differential privacy on the per-site hypervectors. Those are well-studied additions to bundle-sum protocols.
-- **Bio domain.** I have no formal training in biology or medicine. Every clinical-sounding claim in this writeup is conditional on a domain expert's review; canonical gene lists are cited from Parker et al. 2009.
+- **Domain review.** The implementation and results have not undergone formal biological, clinical, or peer review. Clinical-sounding interpretations remain conditional on independent domain-expert validation; canonical gene lists are cited from Parker et al. 2009.
 
 ## What I would do next
 
@@ -142,7 +151,7 @@ The accuracy ceiling here (0.715 test on PAM50) is lower than gradient-boosted t
 
 ## Source-project attribution
 
-The VSA primitives (`bind`, `unbind`, `bundle`, `similarity`) are vendored under `src/krebs/vsa/` from my earlier project **PRISM** ([`Archive/prism`](../Archive/prism), MIT-licensed) — a neural-free cognitive architecture I built to explore symbolic reasoning over high-dimensional vectors. PRISM uses Plate's HRR (FFT-based circular convolution) for symbolic role-filler reasoning. This project adds MAP-C binding (element-wise multiply on bipolar vectors) for high-throughput numeric encoding, standard in the HDC classification literature (Rahimi et al. 2019, Imani et al. 2018), and applies the framework to TCGA-BRCA.
+The VSA primitives (`bind`, `unbind`, `bundle`, `similarity`) are vendored under `src/krebs/vsa/` from the earlier MIT-licensed project [PRISM](https://github.com/Artaeon/prism). PRISM uses Plate's HRR (FFT-based circular convolution) for symbolic role-filler reasoning. This project adds MAP-C binding (element-wise multiplication on bipolar vectors) for high-throughput numeric encoding and applies the framework to TCGA-BRCA.
 
 ## Repo layout
 
@@ -157,7 +166,7 @@ src/krebs/
 └── interpret.py     # Per-(class, gene) scores + PAM50 recovery
 
 scripts/
-├── download_data.py     # Pulls TCGA-BRCA from UCSC Xena (~62 MB)
+├── download_data.py     # Pulls and verifies TCGA-BRCA from UCSC Xena (~62 MB)
 ├── run_experiment.py    # Centralized comparison + interpretability
 └── run_federated.py     # Federated comparison
 
@@ -169,12 +178,31 @@ results/              # Metrics, signed scores, federated.json, experiment.json
 ## Reproducing
 
 ```bash
-uv venv && uv pip install -e ".[dev]"
-python scripts/download_data.py       # ~62 MB into data/raw/
-pytest                                # 14/14 should pass
-python scripts/run_experiment.py      # centralized comparison, writes results/experiment.json
-python scripts/run_federated.py       # federated experiment, writes results/federated.json
+uv sync --locked --extra dev
+uv run python scripts/download_data.py       # ~62 MB into ignored data/raw/
+uv run pytest                                # 14 tests
+uv run python scripts/run_experiment.py      # writes results/experiment.json
+uv run python scripts/run_federated.py       # writes results/federated.json
 ```
+
+On macOS, XGBoost also requires the OpenMP runtime:
+
+```bash
+brew install libomp
+```
+
+The downloader validates both public UCSC Xena files against pinned SHA-256 checksums and never commits the raw data. Reported timings are representative only and depend on the hardware and software environment.
+
+For the complete data-provenance record, expected artifacts, determinism notes,
+and verification checklist, see [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md).
+
+## Contributing and security
+
+Research corrections, reproducibility improvements, additional baselines, and
+well-scoped implementation changes are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md)
+before opening a pull request. Report vulnerabilities privately as described in
+[SECURITY.md](SECURITY.md); do not include controlled-access or patient-level data
+in issues, pull requests, or test fixtures.
 
 ## References
 
